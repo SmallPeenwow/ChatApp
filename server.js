@@ -5,6 +5,8 @@ const socketio = require('socket.io');
 const formatMessage = require('./utils/messages');
 const { userJoin, getCurrentUser, userLeave, getRoomUsers } = require('./utils/users');
 
+// Have to type in the URL in google when server is running [http://localhost:3000]
+
 const app = express();
 const server = http.createServer(app);
 const io = socketio(server);
@@ -26,6 +28,12 @@ io.on('connection', (socket) => {
 
 		// Broadcast when a user connects
 		socket.broadcast.to(user.room).emit('message', formatMessage(botName, `${user.username} has joined the chat`));
+
+		// Send users and rom info
+		io.to(user.room).emit('roomUsers', {
+			room: user.room,
+			users: getRoomUsers(user.room),
+		});
 	});
 
 	// Listen for chatMessage
@@ -41,6 +49,12 @@ io.on('connection', (socket) => {
 
 		if (user) {
 			io.to(user.room).emit('message', formatMessage(botName, `${user.username} has left the chat`));
+
+			// Send users and rom info
+			io.to(user.room).emit('roomUsers', {
+				room: user.room,
+				users: getRoomUsers(user.room),
+			});
 		}
 	});
 });
